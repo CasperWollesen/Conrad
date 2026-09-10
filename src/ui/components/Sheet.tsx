@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useEffect, useId, useRef, type ReactNode, type SyntheticEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode, type SyntheticEvent } from 'react';
 import { texts } from '../../texts';
 import { IconButton } from './Button';
 
@@ -18,9 +18,13 @@ export interface SheetProps {
  */
 export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
   const titleId = useId();
 
-  useEffect(() => {
+  // Layout effect so the dialog is displayed before children's effects run
+  // (e.g. the wheel picker needs layout to set its scroll position).
+  useLayoutEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
@@ -45,7 +49,12 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
       ref={ref}
       className="sheet"
       aria-labelledby={titleId}
-      onClose={onClose}
+      onClose={() => {
+        // The native close event also fires when *we* closed the dialog because
+        // `open` became false (e.g. switching from one sheet to another). Only
+        // treat it as a user-initiated close while the sheet is meant to be open.
+        if (openRef.current) onClose();
+      }}
       onCancel={(e) => {
         e.preventDefault();
         onClose();

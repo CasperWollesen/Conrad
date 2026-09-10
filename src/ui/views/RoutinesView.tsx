@@ -15,7 +15,7 @@ export interface RoutinesViewProps {
 
 export function RoutinesView({ routines, onEdit, onAdd, onTogglePause, onSettings }: RoutinesViewProps) {
   const sorted = [...routines].sort(
-    (a, b) => Number(a.paused) - Number(b.paused) || a.title.localeCompare(b.title, 'da'),
+    (a, b) => Number(a.paused) - Number(b.paused) || a.title.localeCompare(b.title, 'en'),
   );
 
   return (

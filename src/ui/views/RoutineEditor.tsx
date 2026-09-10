@@ -1,6 +1,6 @@
 import { Trash } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
-import { isISODate, isTimeString } from '../../domain/dates';
+import { compareISODate, isISODate, isTimeString } from '../../domain/dates';
 import type { ISODate, Routine, Weekday } from '../../domain/types';
 import type { RoutineInput } from '../../storage/repository';
 import { texts } from '../../texts';
@@ -70,7 +70,6 @@ export function RoutineEditor({ open, routine, today, onClose, onSave, onDelete 
     title: useId(),
     weekdays: useId(),
     startDate: useId(),
-    time: useId(),
     note: useId(),
     prepTitle: useId(),
   };
@@ -92,6 +91,9 @@ export function RoutineEditor({ open, routine, today, onClose, onSave, onDelete 
     if (!title) next.title = texts.routineForm.titleRequired;
     if (form.weekdays.length === 0) next.weekdays = texts.routineForm.weekdaysRequired;
     if (!isISODate(form.startDate)) next.startDate = texts.routineForm.startDateRequired;
+    else if (compareISODate(form.startDate, today) < 0 && form.startDate !== routine?.startDate) {
+      next.startDate = texts.routineForm.startDateInPast;
+    }
     const time = form.time.trim();
     if (time && !isTimeString(time)) next.time = texts.routineForm.startDateRequired;
     const prepTitle = form.prepTitle.trim();
@@ -171,20 +173,25 @@ export function RoutineEditor({ open, routine, today, onClose, onSave, onDelete 
           ) : null}
         </div>
 
-        <div className="row">
-          <Field label={texts.routineForm.time} htmlFor={ids.time} optional error={errors.time}>
-            <TimeField id={ids.time} value={form.time} onChange={(v) => update('time', v)} />
-          </Field>
-          <Field label={texts.routineForm.startDate} htmlFor={ids.startDate} error={errors.startDate}>
-            <TextInput
-              id={ids.startDate}
-              type="date"
-              value={form.startDate}
-              onChange={(e) => update('startDate', e.target.value)}
-              invalid={Boolean(errors.startDate)}
-              required
-            />
-          </Field>
+        <Field label={texts.routineForm.startDate} htmlFor={ids.startDate} error={errors.startDate}>
+          <TextInput
+            id={ids.startDate}
+            type="date"
+            value={form.startDate}
+            min={today}
+            onChange={(e) => update('startDate', e.target.value)}
+            invalid={Boolean(errors.startDate)}
+            required
+          />
+        </Field>
+
+        <div className="field">
+          <TimeField value={form.time} onChange={(v) => update('time', v)} toggleLabel={texts.routineForm.timeToggle} />
+          {errors.time ? (
+            <p className="field__error" role="alert">
+              {errors.time}
+            </p>
+          ) : null}
         </div>
 
         <Toggle
@@ -223,8 +230,8 @@ export function RoutineEditor({ open, routine, today, onClose, onSave, onDelete 
                 onChange={(v) => update('prepDaysBefore', v)}
                 format={texts.routineForm.daysBefore}
                 label={texts.routineForm.prepDaysBefore}
-                decreaseLabel="Færre dage før"
-                increaseLabel="Flere dage før"
+                decreaseLabel={texts.routineForm.fewerDays}
+                increaseLabel={texts.routineForm.moreDays}
               />
             </div>
             <Toggle

@@ -25,8 +25,8 @@ export default defineConfig({
       manifest: {
         name: 'Ready',
         short_name: 'Ready',
-        description: 'Overblik over opgaver, forberedelser og rutiner – før du holder fri.',
-        lang: 'da',
+        description: 'Tasks, preparations and weekly routines at a glance – what to finish before free time.',
+        lang: 'en',
         start_url: base,
         scope: base,
         display: 'standalone',

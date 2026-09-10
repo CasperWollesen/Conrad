@@ -60,7 +60,7 @@ export function ActionCard({
 
         <span className={`action__meta${overdue ? ' action__meta--overdue' : ''}`}>
           {pastDate ? (
-            <span>{texts.action.from(formatRelativeDay(action.date, today).toLowerCase())}</span>
+            <span>{texts.action.from(formatRelativeDay(action.date, today))}</span>
           ) : showDate ? (
             <span>{formatRelativeDay(action.date, today)}</span>
           ) : null}
@@ -82,14 +82,14 @@ export function ActionCard({
             {texts.action.prepFor('')}
             <strong>{action.parent.title}</strong>
             {' · '}
-            {formatWhen(action.parent.date, action.parent.time, today).toLowerCase()}
+            {formatWhen(action.parent.date, action.parent.time, today)}
           </span>
         ) : action.prepInfo ? (
           <span className="action__context">
             {texts.action.prepOf('')}
             <strong>{action.prepInfo.title}</strong>
             {' · '}
-            {formatRelativeDay(action.prepInfo.date, today).toLowerCase()}
+            {formatRelativeDay(action.prepInfo.date, today)}
             {action.prepInfo.status === 'done'
               ? ` · ${texts.action.done.toLowerCase()}`
               : action.prepInfo.status === 'skipped'

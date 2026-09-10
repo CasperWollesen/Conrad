@@ -1,6 +1,7 @@
 import { Smartphone, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { buildActions, buildTodayModel } from './domain/actions';
+import { BEDTIME_SETTING_KEY, isBedtime, parseBedtimeSettings } from './domain/bedtime';
 import type { Action, ISODate, Routine, Task } from './domain/types';
 import { repository } from './storage/repository';
 import { texts } from './texts';
@@ -56,6 +57,10 @@ function Shell() {
   );
   const hasAnyData = Boolean(userData && (userData.tasks.length > 0 || userData.routines.length > 0));
   const todayModel = useMemo(() => buildTodayModel(actions, today, hasAnyData), [actions, today, hasAnyData]);
+
+  const bedtimeSetting = userData?.settings.find((s) => s.key === BEDTIME_SETTING_KEY)?.value;
+  const bedtime = useMemo(() => parseBedtimeSettings(bedtimeSetting), [bedtimeSetting]);
+  const bedtimeUntil = isBedtime(today, nowTime, bedtime) ? bedtime.end : null;
 
   const openAction = overlay.kind === 'action' ? (actions.find((a) => a.id === overlay.actionId) ?? null) : null;
   const closeOverlay = useCallback(() => setOverlay({ kind: 'none' }), []);
@@ -135,6 +140,7 @@ function Shell() {
         {tab === 'today' ? (
           <TodayView
             model={todayModel}
+            bedtimeUntil={bedtimeUntil}
             {...cardHandlers}
             onAdd={() => openTaskEditor(null, today)}
             extra={
@@ -172,6 +178,8 @@ function Shell() {
         open={overlay.kind === 'task'}
         task={overlay.kind === 'task' ? overlay.task : null}
         defaultDate={overlay.kind === 'task' ? overlay.defaultDate : today}
+        today={today}
+        nowTime={nowTime}
         onClose={closeOverlay}
         onSave={handlers.saveTask}
         onDelete={(t) => void handlers.deleteTask(t)}
@@ -205,6 +213,7 @@ function Shell() {
         today={today}
         install={install}
         demoEnabled={DEMO_ENABLED}
+        bedtime={bedtime}
       />
 
     </div>

@@ -1,7 +1,8 @@
 import { Minus, Plus } from 'lucide-react';
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
-import type { Weekday } from '../../domain/types';
+import type { TimeString, Weekday } from '../../domain/types';
 import { WEEKDAY_LETTER, WEEKDAY_NAMES, texts } from '../../texts';
+import { WheelPicker, type WheelOption } from './WheelPicker';
 
 export interface FieldProps {
   label: string;
@@ -145,64 +146,82 @@ export function Stepper({ value, min, max, onChange, format, label, decreaseLabe
   );
 }
 
+// ---------------------------------------------------------------------------
+// Time picking
+
+export const TIME_STEP_MINUTES = 5;
+export const DEFAULT_PICK_TIME: TimeString = '12:00';
+
+const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 / TIME_STEP_MINUTES }, (_, i) => String(i * TIME_STEP_MINUTES).padStart(2, '0'));
+
+/** Rounds a clock time up to the next 5-minute slot ("16:03" -> "16:05"). */
+export function roundUpToStep(time: TimeString): TimeString {
+  const [h = '0', m = '0'] = time.split(':');
+  let hours = Number(h);
+  let minutes = Math.ceil(Number(m) / TIME_STEP_MINUTES) * TIME_STEP_MINUTES;
+  if (minutes >= 60) {
+    minutes = 0;
+    hours = (hours + 1) % 24;
+  }
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+export interface TimePickerProps {
+  value: TimeString;
+  onChange: (value: TimeString) => void;
+  /** Times earlier than this are shown as unavailable (used for "not before now"). */
+  min?: TimeString | null;
+}
+
+/** Two drum wheels: hour (00–23) and minute (5-minute steps). Always 24-hour. */
+export function TimePicker({ value, onChange, min = null }: TimePickerProps) {
+  const [hour = '12', minute = '00'] = value.split(':');
+  const minutes = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort();
+  const [minHour = '', minMinute = ''] = min ? min.split(':') : [];
+
+  const hourOptions: WheelOption[] = HOURS.map((h) => ({ value: h, label: h, disabled: min !== null && h < minHour }));
+  const minuteOptions: WheelOption[] = minutes.map((m) => ({
+    value: m,
+    label: m,
+    disabled: min !== null && (hour < minHour || (hour === minHour && m < minMinute)),
+  }));
+
+  return (
+    <div className="time-picker">
+      <WheelPicker options={hourOptions} value={hour} onChange={(h) => onChange(`${h}:${minute}`)} label={texts.time.hour} />
+      <span className="time-picker__sep" aria-hidden="true">
+        :
+      </span>
+      <WheelPicker
+        options={minuteOptions}
+        value={minute}
+        onChange={(m) => onChange(`${hour}:${m}`)}
+        label={texts.time.minute}
+      />
+    </div>
+  );
+}
+
 export interface TimeFieldProps {
-  id?: string;
   /** "HH:MM" or empty string for no time. */
   value: string;
   onChange: (value: string) => void;
-  /** Minute step; defaults to 5. */
-  step?: number;
+  /** Switch label, e.g. "Set a deadline". */
+  toggleLabel: string;
+  hint?: string;
+  /** Time chosen when the switch is turned on. */
+  defaultValue?: TimeString;
+  min?: TimeString | null;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, '0'));
-
-/**
- * 24-hour time picker built from two native selects (hour, minute), so the
- * format never depends on the device locale and there is no AM/PM.
- */
-export function TimeField({ id, value, onChange, step = 5 }: TimeFieldProps) {
-  const [hour = '', minute = ''] = value ? value.split(':') : [];
-  const minutes = Array.from({ length: Math.ceil(60 / step) }, (_, i) => String(i * step).padStart(2, '0'));
-  // A stored time outside the step grid (e.g. from a backup) stays selectable.
-  if (minute && !minutes.includes(minute)) minutes.push(minute);
-  minutes.sort();
-
-  const setHour = (h: string) => onChange(h ? `${h}:${minute || '00'}` : '');
-  const setMinute = (m: string) => onChange(hour ? `${hour}:${m}` : '');
-
+/** Optional time: a switch that reveals the wheel picker. */
+export function TimeField({ value, onChange, toggleLabel, hint, defaultValue = DEFAULT_PICK_TIME, min = null }: TimeFieldProps) {
+  const enabled = value !== '';
   return (
     <div className="time-field">
-      <select
-        id={id}
-        className="input time-field__select"
-        value={hour}
-        onChange={(e) => setHour(e.target.value)}
-        aria-label={texts.time.hour}
-      >
-        <option value="">{texts.time.none}</option>
-        {HOURS.map((h) => (
-          <option key={h} value={h}>
-            {h}
-          </option>
-        ))}
-      </select>
-      <span className="time-field__sep" aria-hidden="true">
-        .
-      </span>
-      <select
-        className="input time-field__select"
-        value={hour ? minute || '00' : ''}
-        onChange={(e) => setMinute(e.target.value)}
-        disabled={!hour}
-        aria-label={texts.time.minute}
-      >
-        {!hour ? <option value="">–</option> : null}
-        {minutes.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
+      <Toggle checked={enabled} onChange={(on) => onChange(on ? defaultValue : '')} label={toggleLabel} hint={hint} />
+      {enabled ? <TimePicker value={value} onChange={onChange} min={min} /> : null}
     </div>
   );
 }

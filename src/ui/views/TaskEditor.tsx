@@ -1,17 +1,19 @@
 import { Trash } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
-import { addDays, isISODate, isTimeString } from '../../domain/dates';
-import type { ISODate, Task } from '../../domain/types';
+import { addDays, compareISODate, isISODate, isTimeString } from '../../domain/dates';
+import type { ISODate, Task, TimeString } from '../../domain/types';
 import type { TaskInput } from '../../storage/repository';
 import { texts } from '../../texts';
 import { Button } from '../components/Button';
-import { Field, TextArea, TextInput, TimeField, Toggle } from '../components/FormFields';
+import { DEFAULT_PICK_TIME, Field, roundUpToStep, TextArea, TextInput, TimeField, Toggle } from '../components/FormFields';
 import { Sheet } from '../components/Sheet';
 
 export interface TaskEditorProps {
   open: boolean;
   task: Task | null;
   defaultDate: ISODate;
+  today: ISODate;
+  nowTime: TimeString;
   onClose: () => void;
   onSave: (id: string | null, input: TaskInput) => Promise<boolean>;
   onDelete: (task: Task) => void;
@@ -60,14 +62,13 @@ function initialState(task: Task | null, defaultDate: ISODate): FormState {
   };
 }
 
-export function TaskEditor({ open, task, defaultDate, onClose, onSave, onDelete }: TaskEditorProps) {
+export function TaskEditor({ open, task, defaultDate, today, nowTime, onClose, onSave, onDelete }: TaskEditorProps) {
   const [form, setForm] = useState<FormState>(() => initialState(task, defaultDate));
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [saving, setSaving] = useState(false);
   const ids = {
     title: useId(),
     date: useId(),
-    time: useId(),
     note: useId(),
     prepTitle: useId(),
     prepDate: useId(),
@@ -88,22 +89,41 @@ export function TaskEditor({ open, task, defaultDate, onClose, onSave, onDelete 
     setForm((f) => ({
       ...f,
       date,
-      // Keep suggesting "the day before" until the user picks a prep date themselves.
-      prepDate: f.prepDateTouched || !isISODate(date) ? f.prepDate : addDays(date, -1),
+      // Keep suggesting "the day before" (but never earlier than today) until
+      // the user picks a prep date themselves.
+      prepDate: f.prepDateTouched || !isISODate(date) ? f.prepDate : suggestPrepDate(date, today),
     }));
+
+  const isToday = form.date === today;
+  // A time must not be earlier than now when the task is due today.
+  const minTime = isToday ? roundUpToStep(nowTime) : null;
+  const defaultTime = isToday && DEFAULT_PICK_TIME < roundUpToStep(nowTime) ? roundUpToStep(nowTime) : DEFAULT_PICK_TIME;
 
   const validate = (): TaskInput | null => {
     const next: typeof errors = {};
     const title = form.title.trim();
     if (!title) next.title = texts.taskForm.titleRequired;
+
     if (!isISODate(form.date)) next.date = texts.taskForm.dateRequired;
+    else if (compareISODate(form.date, today) < 0 && form.date !== task?.date) next.date = texts.taskForm.dateInPast;
+
     const time = form.time.trim();
-    if (time && !isTimeString(time)) next.time = texts.taskForm.dateRequired;
+    if (time && !isTimeString(time)) next.time = texts.taskForm.timeInPast;
+    else if (time && form.date === today && time < nowTime && !(task?.date === today && task.time === time)) {
+      next.time = texts.taskForm.timeInPast;
+    }
+
     const prepTitle = form.prepTitle.trim();
     if (form.hasPrep) {
       if (!prepTitle) next.prepTitle = texts.taskForm.prepTitleRequired;
       if (!isISODate(form.prepDate)) next.prepDate = texts.taskForm.prepDateRequired;
+      else if (compareISODate(form.prepDate, today) < 0 && form.prepDate !== task?.prep?.date) {
+        next.prepDate = texts.taskForm.prepDateInPast;
+      } else if (isISODate(form.date) && compareISODate(form.prepDate, form.date) > 0) {
+        next.prepDate = texts.taskForm.prepDateAfterMain;
+      }
     }
+
     setErrors(next);
     if (Object.keys(next).length > 0) return null;
     return {
@@ -166,20 +186,31 @@ export function TaskEditor({ open, task, defaultDate, onClose, onSave, onDelete 
           />
         </Field>
 
-        <div className="row">
-          <Field label={texts.taskForm.date} htmlFor={ids.date} error={errors.date}>
-            <TextInput
-              id={ids.date}
-              type="date"
-              value={form.date}
-              onChange={(e) => setDate(e.target.value)}
-              invalid={Boolean(errors.date)}
-              required
-            />
-          </Field>
-          <Field label={texts.taskForm.time} htmlFor={ids.time} optional error={errors.time}>
-            <TimeField id={ids.time} value={form.time} onChange={(v) => update('time', v)} />
-          </Field>
+        <Field label={texts.taskForm.date} htmlFor={ids.date} error={errors.date}>
+          <TextInput
+            id={ids.date}
+            type="date"
+            value={form.date}
+            min={today}
+            onChange={(e) => setDate(e.target.value)}
+            invalid={Boolean(errors.date)}
+            required
+          />
+        </Field>
+
+        <div className="field">
+          <TimeField
+            value={form.time}
+            onChange={(v) => update('time', v)}
+            toggleLabel={texts.taskForm.timeToggle}
+            defaultValue={defaultTime}
+            min={minTime}
+          />
+          {errors.time ? (
+            <p className="field__error" role="alert">
+              {errors.time}
+            </p>
+          ) : null}
         </div>
 
         <Toggle
@@ -219,6 +250,8 @@ export function TaskEditor({ open, task, defaultDate, onClose, onSave, onDelete 
                 id={ids.prepDate}
                 type="date"
                 value={form.prepDate}
+                min={today}
+                max={isISODate(form.date) ? form.date : undefined}
                 onChange={(e) => setForm((f) => ({ ...f, prepDate: e.target.value, prepDateTouched: true }))}
                 invalid={Boolean(errors.prepDate)}
               />
@@ -262,4 +295,10 @@ export function TaskEditor({ open, task, defaultDate, onClose, onSave, onDelete 
       </form>
     </Sheet>
   );
+}
+
+/** The day before the task, but never earlier than today. */
+function suggestPrepDate(date: ISODate, today: ISODate): ISODate {
+  const dayBefore = addDays(date, -1);
+  return compareISODate(dayBefore, today) < 0 ? today : dayBefore;
 }

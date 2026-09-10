@@ -1,11 +1,13 @@
 import { CircleCheck, Download, FlaskConical, Info, Smartphone, Trash, Upload } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createBackup, parseBackup, serializeBackup, type BackupError, type BackupSummary } from '../../domain/backup';
-import type { ISODate, UserData } from '../../domain/types';
+import { BEDTIME_SETTING_KEY, isValidBedtime, type BedtimeSettings } from '../../domain/bedtime';
+import type { ISODate, TimeString, UserData } from '../../domain/types';
 import { demoData } from '../../storage/demoData';
 import { repository } from '../../storage/repository';
 import { APP_NAME, texts } from '../../texts';
 import { Button } from '../components/Button';
+import { TimePicker, Toggle } from '../components/FormFields';
 import { Sheet } from '../components/Sheet';
 import { formatTimestamp } from '../format';
 import type { InstallState } from '../hooks/useInstallPrompt';
@@ -18,6 +20,7 @@ export interface SettingsSheetProps {
   install: InstallState;
   /** The demo section is only shown in development or with ?demo in the URL. */
   demoEnabled: boolean;
+  bedtime: BedtimeSettings;
 }
 
 type ImportState =
@@ -35,8 +38,29 @@ function backupFileName(now: Date): string {
   return `${APP_NAME.toLowerCase()}-backup-${stamp}.json`;
 }
 
-export function SettingsSheet({ open, onClose, today, install, demoEnabled }: SettingsSheetProps) {
+export function SettingsSheet({ open, onClose, today, install, demoEnabled, bedtime }: SettingsSheetProps) {
   const toast = useToast();
+  const [bedtimeError, setBedtimeError] = useState(false);
+  // Local copy so quick successive wheel changes never overwrite each other
+  // while the previous write is still on its way back through liveQuery.
+  const [localBedtime, setLocalBedtime] = useState<BedtimeSettings>(bedtime);
+  useEffect(() => setLocalBedtime(bedtime), [bedtime]);
+
+  const saveBedtime = (patch: Partial<BedtimeSettings>) => {
+    setLocalBedtime((prev) => {
+      const next = { ...prev, ...patch };
+      if (!isValidBedtime(next)) {
+        setBedtimeError(true);
+        return prev;
+      }
+      setBedtimeError(false);
+      repository.setSetting(BEDTIME_SETTING_KEY, next).catch((e: unknown) => {
+        console.error(e);
+        toast.show({ message: texts.toast.saveFailed, variant: 'error' });
+      });
+      return next;
+    });
+  };
   const fileInput = useRef<HTMLInputElement>(null);
   const [importState, setImportState] = useState<ImportState>({ kind: 'idle' });
   const [persisted, setPersisted] = useState<boolean | null>(null);
@@ -175,6 +199,40 @@ export function SettingsSheet({ open, onClose, today, install, demoEnabled }: Se
       </section>
 
       <section className="settings-group">
+        <h3 className="settings-group__title">{texts.settings.bedtime.title}</h3>
+        <p className="settings-group__text">{texts.settings.bedtime.description}</p>
+        <Toggle
+          checked={localBedtime.enabled}
+          onChange={(enabled) => saveBedtime({ enabled })}
+          label={texts.settings.bedtime.enabled}
+        />
+        {localBedtime.enabled ? (
+          <>
+            <BedtimeTime
+              label={texts.settings.bedtime.weekdayStart}
+              value={localBedtime.weekdayStart}
+              onChange={(weekdayStart) => saveBedtime({ weekdayStart })}
+            />
+            <BedtimeTime
+              label={texts.settings.bedtime.weekendStart}
+              value={localBedtime.weekendStart}
+              onChange={(weekendStart) => saveBedtime({ weekendStart })}
+            />
+            <BedtimeTime
+              label={texts.settings.bedtime.end}
+              value={localBedtime.end}
+              onChange={(end) => saveBedtime({ end })}
+            />
+            {bedtimeError ? (
+              <p className="field__error" role="alert">
+                {texts.settings.bedtime.invalid}
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </section>
+
+      <section className="settings-group">
         <h3 className="settings-group__title">{texts.settings.backup.title}</h3>
         <p className="settings-group__text">{texts.settings.backup.description}</p>
         {persisted !== null ? (
@@ -273,5 +331,23 @@ export function SettingsSheet({ open, onClose, today, install, demoEnabled }: Se
         </div>
       </section>
     </Sheet>
+  );
+}
+
+/** One labelled clock time in the bedtime section. Edits apply as soon as the wheel stops. */
+function BedtimeTime({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: TimeString;
+  onChange: (value: TimeString) => void;
+}) {
+  return (
+    <div className="field">
+      <span className="field__label">{label}</span>
+      <TimePicker value={value} onChange={onChange} />
+    </div>
   );
 }

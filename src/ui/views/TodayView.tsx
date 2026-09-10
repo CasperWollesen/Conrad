@@ -13,6 +13,8 @@ export interface TodayViewProps {
   model: TodayModel;
   today: ISODate;
   nowTime: TimeString;
+  /** Clock time bedtime ends, or null when it is not bedtime. */
+  bedtimeUntil: TimeString | null;
   onToggleDone: (action: Action) => void;
   onOpen: (action: Action) => void;
   onAdd: () => void;
@@ -20,7 +22,17 @@ export interface TodayViewProps {
   extra?: ReactNode;
 }
 
-export function TodayView({ model, today, nowTime, onToggleDone, onOpen, onAdd, onSettings, extra }: TodayViewProps) {
+export function TodayView({
+  model,
+  today,
+  nowTime,
+  bedtimeUntil,
+  onToggleDone,
+  onOpen,
+  onAdd,
+  onSettings,
+  extra,
+}: TodayViewProps) {
   const cardProps = { today, nowTime, onToggleDone, onOpen };
   const isEmpty = model.status.kind === 'empty';
 
@@ -36,7 +48,7 @@ export function TodayView({ model, today, nowTime, onToggleDone, onOpen, onAdd, 
         </div>
       </header>
 
-      <StatusCard status={model.status} onAdd={onAdd} />
+      <StatusCard status={model.status} bedtimeUntil={bedtimeUntil} onAdd={onAdd} />
 
       {!isEmpty ? (
         <div className="view__stack">

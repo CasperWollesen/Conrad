@@ -60,7 +60,7 @@ export function ActionSheet({
               <div className="detail__link">
                 <Link2 size={16} aria-hidden="true" />
                 <span>
-                  {texts.action.prepFor(a.parent.title)} · {formatWhen(a.parent.date, a.parent.time, today).toLowerCase()}
+                  {texts.action.prepFor(a.parent.title)} · {formatWhen(a.parent.date, a.parent.time, today)}
                 </span>
               </div>
             ) : null}
@@ -68,7 +68,7 @@ export function ActionSheet({
               <div className="detail__link">
                 <Link2 size={16} aria-hidden="true" />
                 <span>
-                  {texts.action.prepOf(a.prepInfo.title)} · {formatRelativeDay(a.prepInfo.date, today).toLowerCase()}
+                  {texts.action.prepOf(a.prepInfo.title)} · {formatRelativeDay(a.prepInfo.date, today)}
                   {a.prepInfo.status === 'done' ? ` · ${texts.action.done.toLowerCase()}` : ''}
                   {a.prepInfo.status === 'skipped' ? ` · ${texts.action.skipped.toLowerCase()}` : ''}
                 </span>

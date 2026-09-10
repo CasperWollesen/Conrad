@@ -1,15 +1,32 @@
-import { CircleCheckBig, ListChecks, Sparkles } from 'lucide-react';
+import { CircleCheckBig, ListChecks, Moon, Sparkles } from 'lucide-react';
 import type { ReadyStatus } from '../../domain/actions';
+import type { TimeString } from '../../domain/types';
 import { texts } from '../../texts';
+import { formatClock } from '../format';
 import { Button } from './Button';
 
 export interface StatusCardProps {
   status: ReadyStatus;
+  /** When set, it is bedtime until this clock time and the card says good night. */
+  bedtimeUntil: TimeString | null;
   onAdd: () => void;
 }
 
 /** The big, calm answer to "can I go now?". Only speaks about registered actions. */
-export function StatusCard({ status, onAdd }: StatusCardProps) {
+export function StatusCard({ status, bedtimeUntil, onAdd }: StatusCardProps) {
+  if (bedtimeUntil !== null) {
+    return (
+      <section className="status-card status-card--bedtime" aria-live="polite">
+        <div className="status-card__eyebrow">
+          <Moon size={16} aria-hidden="true" />
+          {texts.status.bedtimeEyebrow}
+        </div>
+        <h2 className="status-card__title">{texts.status.bedtimeTitle}</h2>
+        <p className="status-card__subtitle">{texts.status.bedtimeSubtitle(formatClock(bedtimeUntil))}</p>
+      </section>
+    );
+  }
+
   if (status.kind === 'empty') {
     return (
       <section className="status-card status-card--empty" aria-live="polite">

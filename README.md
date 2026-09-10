@@ -1,52 +1,58 @@
 # Ready
 
-Hverdagsoverblik til en teenager: *hvad bør jeg have ordnet, før jeg holder fri?*
+A daily overview for a teenager: *what should I finish before free time?*
 
-Ready er en installérbar web-app (PWA) uden konto, backend eller notifikationer. Alle data
-gemmes lokalt i browserens IndexedDB. Appen hostes som statiske filer på GitHub Pages:
+Ready is an installable web app (PWA) with no account, backend or notifications. All data is
+stored locally in the browser's IndexedDB. The app is hosted as static files on GitHub Pages:
 <https://casperwollesen.github.io/Conrad/>
 
-Brugerfladen er på dansk; kode, filnavne og typer er på engelsk. Appnavn og alle tekster
-ligger samlet i [`src/texts.ts`](src/texts.ts), så de er lette at ændre.
+The UI is in English; all user-facing strings live in [`src/texts.ts`](src/texts.ts) together
+with the app name, so wording is easy to change.
 
-## Funktioner
+## Features
 
-- **I dag** – dato, et roligt statuskort (“2 ting først” / “Du er klar”), afventende
-  før-fritid-opgaver (inkl. tidligere, ikke klarede), andre opgaver i dag, et kig på i morgen
-  og en sammenklappelig “Klaret i dag”.
-- **Kommende** – dagsgrupperet liste 14 dage frem (kan udvides op til 13 uger), med
-  tidligere ikke-klarede øverst og en “+” pr. dag til at oprette en opgave på netop den dato.
-- **Rutiner** – ugentlige rutiner på én eller flere ugedage, med valgfri forberedelse et antal
-  dage før, pause/genoptag og redigering.
-- **Opgaver med forberedelse** – fx “Kage med i skole fredag kl. 08.00” med forberedelsen
-  “Bag kage” torsdag. Forberedelse og hovedhandling afkrydses hver for sig.
-- **Hurtig afkrydsning med fortryd** – ingen bekræftelsesdialoger ved almindelige handlinger.
-- **Spring over denne gang** – for én konkret rutineforekomst, uden at røre resten af rutinen.
-- **Backup** – eksport/import af én JSON-fil med validering, forhåndsvisning og atomisk erstatning.
-- **Offline** – service worker cacher appen; alt virker uden internet efter første indlæsning.
-- **Opdateringer** – “Ny version klar” med en knap; appen genindlæser aldrig af sig selv.
+- **Today** – the date, a calm status card ("2 things first" / "You're ready" / "Good night"),
+  pending before-free-time tasks (including earlier ones not done), other tasks today, a peek at
+  tomorrow and a collapsible "Done today".
+- **Upcoming** – a day-grouped list for the next 14 days (expandable up to 13 weeks), with
+  earlier unfinished items on top and a "+" per day to add a task on that date.
+- **Routines** – weekly routines on one or more weekdays, with optional preparation a number of
+  days before, pause/resume and editing.
+- **Tasks with preparation** – e.g. "Bring cake to school, Friday 08:00" with the preparation
+  "Bake the cake" on Thursday. Preparation and main action are checked off separately.
+- **Quick check-off with undo** – no confirmation dialogs for everyday actions.
+- **Skip this time** – for one concrete routine occurrence, without touching the routine.
+- **Bedtime** – configurable in settings. Defaults: 21:30 on school nights (Sunday–Thursday),
+  23:00 on Friday and Saturday nights, back at 06:00. During that window the front page says
+  "Good night" instead of listing tasks.
+- **Time picking** – an iOS-style drum picker (hour and minute wheels, 5-minute steps, 24-hour
+  clock, endless scrolling). A new deadline starts at 12:00. Times and dates in the past cannot
+  be chosen for new tasks.
+- **Backup** – export/import of one JSON file with validation, preview and atomic replacement.
+- **Offline** – a service worker caches the app; everything works without internet after the
+  first load.
+- **Updates** – "New version ready" with a button; the app never reloads on its own.
 
-Bevidst udeladt (version 1): notifikationer, forældrekontrol, computerspærring, skærmtid,
-sociale funktioner, point/streaks, kalenderintegration, cloud-sync, flere brugere.
+Deliberately left out (version 1): notifications, parental controls, computer blocking, screen
+time, social features, points/streaks, calendar integration, cloud sync, multiple users.
 
-## Teknologi
+## Technology
 
-| Del                | Valg                                                   |
-| ------------------ | ------------------------------------------------------ |
-| UI                 | React 19, TypeScript (strict), almindelig CSS + tokens |
-| Build              | Vite 7                                                 |
-| Lagring            | IndexedDB via Dexie 4                                  |
-| PWA                | vite-plugin-pwa (manifest, service worker, offline)    |
-| Ikoner             | lucide-react                                           |
-| Test               | Vitest 4 (+ fake-indexeddb til lagringstests)          |
-| Hosting            | GitHub Pages via GitHub Actions                        |
+| Part      | Choice                                                    |
+| --------- | --------------------------------------------------------- |
+| UI        | React 19, TypeScript (strict), plain CSS with design tokens |
+| Build     | Vite 7                                                    |
+| Storage   | IndexedDB via Dexie 4                                     |
+| PWA       | vite-plugin-pwa (manifest, service worker, offline)       |
+| Icons     | lucide-react                                              |
+| Tests     | Vitest 4 (+ fake-indexeddb for storage tests)             |
+| Hosting   | GitHub Pages via GitHub Actions                           |
 
-Ingen router, ingen global state-bibliotek, ingen eksterne CDN-kald. Skrifttypen er
-systemets egen.
+No router, no global state library, no external CDN calls. The font is the system font.
 
-## Kom i gang
+## Getting started
 
-Kræver Node.js 20.19+ eller 22.12+ og npm.
+Requires Node.js 20.19+ or 22.12+ and npm.
 
 ```bash
 npm install
@@ -56,120 +62,129 @@ npm install
 npm run dev
 ```
 
-Dev-serveren kører på <http://localhost:5173/Conrad/> (appen ligger på samme understi som på
-GitHub Pages, så stier kan testes lokalt). Service worker er slået fra i dev.
+The dev server runs on <http://localhost:5173/Conrad/> (the app lives on the same sub path as on
+GitHub Pages, so paths can be tested locally). The service worker is disabled in dev.
 
-Eksempeldata: I dev-tilstand findes knappen **Indlæs eksempeldata** under Indstillinger. I
-produktion vises den kun, hvis URL'en indeholder `?demo`. Eksempeldata kommer aldrig tilbage af
-sig selv efter sletning.
+Sample data: in dev mode the **Load sample data** button is available under Settings. In
+production it is only shown when the URL contains `?demo`. Sample data never comes back by
+itself after deletion.
 
 ### Scripts
 
-| Kommando            | Gør                                                   |
+| Command             | Does                                                  |
 | ------------------- | ----------------------------------------------------- |
-| `npm run dev`       | Udviklingsserver med hot reload                       |
+| `npm run dev`       | Development server with hot reload                    |
 | `npm run typecheck` | `tsc --noEmit`                                        |
-| `npm test`          | Kører alle Vitest-tests én gang                       |
-| `npm run build`     | Typecheck + produktionsbuild til `dist/`              |
-| `npm run preview`   | Serverer `dist/` lokalt (brug denne til offline-test) |
-| `npm run icons`     | Regenererer PNG-ikonerne i `public/`                  |
+| `npm test`          | Runs all Vitest tests once                            |
+| `npm run build`     | Typecheck + production build into `dist/`             |
+| `npm run preview`   | Serves `dist/` locally (use this for offline testing) |
+| `npm run icons`     | Regenerates the PNG icons in `public/`                |
 
-### Offline-test af et produktionsbuild
+### Offline test of a production build
 
 ```bash
 npm run build && npm run preview
 ```
 
-Åbn <http://localhost:4173/Conrad/>, vent til siden er indlæst (service worker installeres),
-slå netværk fra i DevTools (eller sluk wifi) og genindlæs. Appen skal åbne, vise data og kunne
-oprette/afkrydse som normalt.
+Open <http://localhost:4173/Conrad/>, wait for the page to load (the service worker installs),
+switch networking off in DevTools (or turn off Wi-Fi) and reload. The app must open, show data
+and allow creating/checking off as usual.
 
-## Deployment til GitHub Pages
+## Deployment to GitHub Pages
 
-Workflowet [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) kører ved push til
-`main`: `npm ci` → typecheck → test → build → deploy med `actions/deploy-pages`.
+The workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs on every push
+to `main`: `npm ci` → typecheck → test → build → deploy with `actions/deploy-pages`.
 
-**Manuel engangsopsætning i GitHub:** Repository → *Settings* → *Pages* → *Build and
-deployment* → *Source*: vælg **GitHub Actions**. Uden dette trin fejler deploy-jobbet.
+**One-time manual setup in GitHub:** Repository → *Settings* → *Pages* → *Build and
+deployment* → *Source*: choose **GitHub Actions**. Without this the deploy job fails with 404.
 
-Base path: `vite.config.ts` bruger `BASE_PATH` (standard `/Conrad/`). Workflowet sætter den
-automatisk til `/<repository-navn>/`, så et omdøbt repository virker uden ændringer. Til hosting på
-domænets rod: `BASE_PATH=/ npm run build`.
+Base path: `vite.config.ts` uses `BASE_PATH` (default `/Conrad/`). The workflow sets it to
+`/<repository-name>/` automatically, so a renamed repository works without changes. For hosting
+at a domain root: `BASE_PATH=/ npm run build`.
 
-## Arkitektur
+## Architecture
 
 ```
 src/
-  texts.ts              Alle danske tekster og appnavn
-  domain/               Ren logik uden React (fuldt testet)
-    types.ts            Datamodel
-    dates.ts            Lokale kalenderdatoer, ugedage, DST-sikker addDays
+  texts.ts              All UI strings and the app name
+  domain/               Pure logic without React (fully tested)
+    types.ts            Data model
+    dates.ts            Local calendar dates, weekdays, DST-safe addDays
     tasks.ts            Task -> Action(s)
-    routines.ts         Rutine -> forekomster -> Action(s)
-    actions.ts          Klar-status, sortering, dagsgruppering, "i dag"-model
-    backup.ts           Backupformat og validering
-    ids.ts              Stabile id'er
+    routines.ts         Routine -> occurrences -> Action(s)
+    actions.ts          Ready status, sorting, day grouping, "today" model
+    bedtime.ts          Bedtime window (school nights / weekend nights / morning)
+    backup.ts           Backup format and validation
+    ids.ts              Stable ids
   storage/
-    db.ts               Dexie-skema (versioneret)
-    repository.ts       Alle læse/skrive-operationer, transaktioner
-    demoData.ts         Eksempeldata (kun via eksplicit knap)
+    db.ts               Dexie schema (versioned)
+    repository.ts       All read/write operations, transactions
+    demoData.ts         Sample data (only via the explicit button)
   ui/
-    components/         Genbrugelige byggeklodser (Sheet, ActionCard, Toggle …)
-    views/              I dag, Kommende, Rutiner, editorer, indstillinger
-    hooks/              Ur/dato, live data fra IndexedDB, toast, install-prompt
-    useActions.ts       Brugerhandlinger med fejlhåndtering og fortryd
+    components/         Reusable building blocks (Sheet, ActionCard, WheelPicker, Toggle …)
+    views/              Today, Upcoming, Routines, editors, settings
+    hooks/              Clock/date, live data from IndexedDB, toast, install prompt
+    useActions.ts       User actions with error handling and undo
   styles/               tokens.css (design tokens), base, components, views
 ```
 
-UI'et læser altid fra databasen via Dexies `liveQuery`, så en opgave vises kun som gemt eller
-udført, hvis skrivningen faktisk lykkedes. Fejler en skrivning, vises en fejl-toast, og
-skærmen forbliver uændret.
+The UI always reads from the database through Dexie's `liveQuery`, so a task is only shown as
+saved or done if the write actually succeeded. If a write fails, an error toast is shown and the
+screen stays unchanged.
 
-## Datamodel
+## Data model
 
-- **Task** – enkeltopgave: `title`, `date` (YYYY-MM-DD), valgfrit `time` (HH:MM), `note`,
-  `beforeFreeTime`, `completedAt` og valgfri `prep` `{ title, date, beforeFreeTime, completedAt }`.
-  Hovedhandling og forberedelse er to trin (`main`/`prep`) på samme opgave med hver sin
-  afkrydsning.
-- **Routine** – gentagelsesregel: `weekdays` (1 = mandag … 7 = søndag), `startDate`, valgfrit
-  `time`, `note`, `beforeFreeTime`, valgfri `prep` `{ title, daysBefore, beforeFreeTime }`, `paused`.
-- **OccurrenceState** – status for ét trin af én konkret forekomst. Id =
-  `routineId|eventDate|stepId`, hvor `eventDate` altid er datoen for hovedhandlingen. Forberedelsen
-  til fredag identificeres altså som fredagens forekomst, selv om den udføres torsdag. Kun
-  `done`/`skipped` gemmes; afventende forekomster har ingen række.
-- **Setting** – små nøgle/værdi-indstillinger (fx om install-hintet er lukket).
-- **Action** (beregnet, gemmes ikke) – en konkret, afkrydsbar ting på en konkret dato, afledt
-  af opgaver og rutiner. Har stabilt id (`task:<id>:<step>` / `routine:<id>:<eventDate>:<step>`).
+- **Task** – single task: `title`, `date` (YYYY-MM-DD), optional `time` (HH:MM), `note`,
+  `beforeFreeTime`, `completedAt` and optional `prep` `{ title, date, beforeFreeTime, completedAt }`.
+  Main action and preparation are two steps (`main`/`prep`) on the same task, each with its own
+  check-off.
+- **Routine** – recurrence rule: `weekdays` (1 = Monday … 7 = Sunday), `startDate`, optional
+  `time`, `note`, `beforeFreeTime`, optional `prep` `{ title, daysBefore, beforeFreeTime }`, `paused`.
+- **OccurrenceState** – status for one step of one concrete occurrence. Id =
+  `routineId|eventDate|stepId`, where `eventDate` is always the date of the main event. Friday's
+  preparation is therefore identified as Friday's occurrence even though it is done on Thursday.
+  Only `done`/`skipped` are stored; pending occurrences have no row.
+- **Setting** – small key/value settings, e.g. `bedtime` `{ enabled, weekdayStart, weekendStart, end }`
+  and whether the install hint was dismissed.
+- **Action** (computed, never stored) – a concrete, checkable thing on a concrete date, derived
+  from tasks and routines. Has a stable id (`task:<id>:<step>` / `routine:<id>:<eventDate>:<step>`).
 
-## Dato- og gentagelsesregler
+## Date and recurrence rules
 
-- Datoer er lokale kalenderdatoer som strenge (`YYYY-MM-DD`); klokkeslæt er separate `HH:MM` i
-  lokal tid. “I dag” bestemmes fra den lokale dato, aldrig UTC.
-- `addDays` bruger kalenderen (`new Date(y, m, d + n, 12)`), ikke 24-timers-multipla, så
-  måneds-, års- og sommertidsskift håndteres korrekt.
-- Rutineforekomster beregnes fra `startDate` og frem til dagens dato + 91 dage, hver gang appen
-  åbnes, kommer i forgrunden eller passerer midnat, mens den er åben. Ingen baggrundsproces.
-- Forberedelser, der ville ligge før `startDate`, genereres ikke – en ny rutine skaber ikke et
-  historisk efterslæb.
-- Pausede rutiner giver ingen forekomster.
-- Ændringer i en rutine gælder fremad. Status gemmes pr. forekomst, så allerede udførte
-  forekomster dukker ikke op igen.
+- Dates are local calendar dates as strings (`YYYY-MM-DD`); clock times are separate `HH:MM`
+  strings in local time. "Today" is determined from the local date, never UTC.
+- `addDays` uses the calendar (`new Date(y, m, d + n, 12)`), not multiples of 24 hours, so
+  month, year and daylight-saving boundaries are handled correctly.
+- Routine occurrences are computed from `startDate` up to today + 91 days, every time the app
+  opens, comes to the foreground or passes midnight while open. No background process.
+- Preparations that would fall before `startDate` are not generated, so a new routine never
+  creates a historical backlog.
+- Paused routines yield no occurrences.
+- Changes to a routine apply going forward. Status is stored per occurrence, so occurrences
+  already done never resurface.
 
-### Reglen for “Du er klar”
+### The "You're ready" rule
 
-En handling er *afventende før fritid*, når den (1) er markeret “skal være klaret før fritid”,
-(2) har dato i dag eller tidligere og (3) hverken er udført eller sprunget over. Status er klar,
-når der ikke er nogen sådanne handlinger. Fremtidige handlinger blokerer aldrig; en forberedelse
-kan blokere i dag, selv om hovedhandlingen er i morgen. Et passeret klokkeslæt markerer aldrig
-noget som udført, og opgaver uden klokkeslæt vises ikke som forsinkede på selve dagen.
+An action is *pending before free time* when it (1) is flagged "must be done before free time",
+(2) is dated today or earlier and (3) is neither done nor skipped. The status is ready when there
+are no such actions. Future actions never block; a preparation can block today even though the
+main action is tomorrow. A passed clock time never marks anything as done, and tasks without a
+time are not shown as overdue during their own day.
 
-Tidligere, ikke klarede handlinger forsvinder ikke ved midnat. De ligger øverst i “Før fritid”
-(hvis de tæller) eller i en sammenklappelig “Tidligere”-sektion, indtil de udføres, får ny dato,
-springes over (rutiner) eller slettes.
+Earlier, unfinished actions do not disappear at midnight. They sit on top of "Before free time"
+(if they count) or in a collapsible "Earlier" section until they are done, rescheduled, skipped
+(routines) or deleted.
+
+### Bedtime
+
+`isBedtime(today, nowTime, settings)` is true from the evening's start time (weekend start on
+Friday and Saturday evenings, weekday start otherwise) until the morning end time. Any time
+before the end time counts as the previous evening's window. Settings are validated so the
+morning time must be earlier than both start times.
 
 ## Backup
 
-Indstillinger → **Eksportér backup** gemmer én JSON-fil:
+Settings → **Export backup** saves one JSON file:
 
 ```json
 {
@@ -180,13 +195,14 @@ Indstillinger → **Eksportér backup** gemmer én JSON-fil:
 }
 ```
 
-**Importér backup** validerer struktur, felter, datoer og version, viser hvad der importeres
-(antal opgaver, rutiner, afkrydsninger og eksporttidspunkt) og kræver bekræftelse. Erstatningen
-sker i én IndexedDB-transaktion; fejler noget, ændres intet. Ugyldige eller ikke-understøttede
-filer afvises med en forklaring uden at røre eksisterende data.
+**Import backup** validates structure, fields, dates and version, shows what will be imported
+(number of tasks, routines, check-offs and export time) and requires confirmation. The
+replacement happens in one IndexedDB transaction; if anything fails, nothing changes. Invalid or
+unsupported files are rejected with an explanation without touching existing data.
 
-`navigator.storage.persist()` kaldes første gang, der gemmes noget. Det er ingen garanti – det
-står også i indstillingerne, sammen med opfordringen til at tage backup før telefonskift.
+`navigator.storage.persist()` is requested the first time something is saved. It is not a
+guarantee, which the settings screen also says, together with the advice to back up before
+switching phones.
 
 ## Tests
 
@@ -194,19 +210,20 @@ står også i indstillingerne, sammen med opfordringen til at tage backup før t
 npm test
 ```
 
-Testene ligger ved siden af koden (`src/**/*.test.ts`) og dækker bl.a. de 12 scenarier fra
-kravspecifikationen: før-fritid-regel i dag/i morgen, kageeksemplet (bagning 10. sep., medbring
-11. sep. kl. 08.00, uafhængig afkrydsning), gymnastik tirsdag/fredag → pakning mandag/torsdag,
-afkrydsning pr. forekomst, spring over, uafsluttede handlinger over datoskift, intet historisk
-efterslæb, måneds-/års-/sommertidsskift samt eksport/import og afvisning af ugyldig import.
+Tests live next to the code (`src/**/*.test.ts`) and cover, among other things, the twelve
+scenarios from the specification: the before-free-time rule today/tomorrow, the cake example
+(baking on 10 Sep, bringing on 11 Sep at 08:00, independent check-off), gymnastics
+Tuesday/Friday → packing Monday/Thursday, check-off per occurrence, skipping, unfinished actions
+across a date change, no historical backlog, month/year/DST boundaries, export/import and
+rejection of invalid imports. The bedtime window has its own tests.
 
-## Kendte begrænsninger
+## Known limitations
 
-- Ingen sammenfletning ved import; en backup erstatter alt.
-- Native datovælger (`<input type="date">`) følger enhedens sprog. Tidspunkter vælges med to
-  24-timers-lister (time og minut i 5-minutters trin), så der er aldrig AM/PM.
-- iOS Safari viser ikke en automatisk install-prompt; appen viser i stedet en kort vejledning
-  (“Del → Føj til hjemmeskærm”).
-- Vedvarende lagring afhænger af browseren; backup er den reelle sikkerhed.
-- Der er ingen bulk-handling til at rydde mange gamle, ikke-klarede rutineforekomster; de
-  håndteres én ad gangen (udfør, spring over) eller ved at sætte rutinen på pause.
+- No merging on import; a backup replaces everything.
+- The native date picker (`<input type="date">`) follows the device language. Times are picked
+  with the built-in wheels (24-hour, 5-minute steps).
+- iOS Safari shows no automatic install prompt; the app shows a short guide instead
+  ("Share → Add to Home Screen").
+- Persistent storage depends on the browser; the backup is the real safety net.
+- There is no bulk action to clear many old, unfinished routine occurrences; they are handled
+  one at a time (done, skip) or by pausing the routine.

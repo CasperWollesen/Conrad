@@ -28,7 +28,7 @@ export function Nav({ active, onChange, onAdd, addLabel, onSettings }: NavProps)
           </span>
           <span className="sidebar__name">{texts.app.name}</span>
         </div>
-        <nav className="sidebar__nav" aria-label="Hovedmenu">
+        <nav className="sidebar__nav" aria-label={texts.nav.mainMenu}>
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -58,7 +58,7 @@ export function Nav({ active, onChange, onAdd, addLabel, onSettings }: NavProps)
         {addLabel}
       </button>
 
-      <nav className="tabbar" aria-label="Hovedmenu">
+      <nav className="tabbar" aria-label={texts.nav.mainMenu}>
         <div className="tabbar__inner">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button

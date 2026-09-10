@@ -23,7 +23,7 @@ export function buildActions(input: BuildInput, today: ISODate): Action[] {
 }
 
 /**
- * The rule behind "Du er klar": an action counts as pending-before-free-time
+ * The rule behind "You're ready": an action counts as pending-before-free-time
  * when it is flagged, its date is today or earlier, and it is still pending.
  * Future actions never block, preparations for tomorrow can block today.
  */
@@ -90,7 +90,7 @@ export function compareByRelevance(a: Action, b: Action): number {
     compareISODate(a.date, b.date) ||
     compareTime(a.time, b.time) ||
     Number(b.beforeFreeTime) - Number(a.beforeFreeTime) ||
-    a.title.localeCompare(b.title, 'da')
+    a.title.localeCompare(b.title, 'en')
   );
 }
 
@@ -101,7 +101,7 @@ export function compareWithinDay(a: Action, b: Action): number {
     rank(a.status) - rank(b.status) ||
     compareTime(a.time, b.time) ||
     Number(b.beforeFreeTime) - Number(a.beforeFreeTime) ||
-    a.title.localeCompare(b.title, 'da')
+    a.title.localeCompare(b.title, 'en')
   );
 }
 
