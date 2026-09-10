@@ -172,6 +172,7 @@ export const texts = {
     showingDays: (days: number) => `Next ${days} days`,
     addToDay: 'Add a task on this day',
     overdueSection: 'Earlier, not done',
+    showRoutines: 'Show routines',
   },
 
   occurrence: {

@@ -7,6 +7,7 @@ import { texts } from '../../texts';
 import { ActionCard } from '../components/ActionCard';
 import { Button, IconButton } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { Toggle } from '../components/FormFields';
 import { Section } from '../components/Section';
 import { formatDayLong, formatDayShort, formatRelativeDay } from '../format';
 
@@ -21,13 +22,27 @@ export interface UpcomingViewProps {
   onOpen: (action: Action) => void;
   onAddForDate: (date: ISODate) => void;
   onSettings: () => void;
+  /** Whether routine occurrences are listed (user preference, default on). */
+  showRoutines: boolean;
+  onShowRoutinesChange: (show: boolean) => void;
 }
 
-export function UpcomingView({ actions, today, nowTime, onToggleDone, onOpen, onAddForDate, onSettings }: UpcomingViewProps) {
+export function UpcomingView({
+  actions,
+  today,
+  nowTime,
+  onToggleDone,
+  onOpen,
+  onAddForDate,
+  onSettings,
+  showRoutines,
+  onShowRoutinesChange,
+}: UpcomingViewProps) {
   const [days, setDays] = useState(DEFAULT_DAYS);
   const to = addDays(today, days - 1);
-  const groups = groupByDay(actions, today, to);
-  const overdue = overdueActions(actions, today);
+  const visible = showRoutines ? actions : actions.filter((a) => a.source.kind !== 'routine');
+  const groups = groupByDay(visible, today, to);
+  const overdue = overdueActions(visible, today);
   const cardProps = { today, nowTime, onToggleDone, onOpen };
   const canShowMore = days < HORIZON_DAYS;
 
@@ -42,6 +57,10 @@ export function UpcomingView({ actions, today, nowTime, onToggleDone, onOpen, on
           <IconButton label={texts.settings.open} icon={<Settings size={22} />} onClick={onSettings} />
         </div>
       </header>
+
+      <div className="filter-bar">
+        <Toggle checked={showRoutines} onChange={onShowRoutinesChange} label={texts.upcoming.showRoutines} />
+      </div>
 
       <div className="view__stack">
         {overdue.length > 0 ? (

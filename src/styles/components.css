@@ -1207,6 +1207,17 @@
   flex-wrap: wrap;
 }
 
+.filter-bar {
+  padding: 0 var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+}
+
+.filter-bar .toggle {
+  min-height: 48px;
+}
+
 /* ---------------------------------------------------------------------------
  * Day groups (upcoming)
  * ------------------------------------------------------------------------- */

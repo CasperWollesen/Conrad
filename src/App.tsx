@@ -30,6 +30,7 @@ type Overlay =
   | { kind: 'settings' };
 
 const DEMO_ENABLED = import.meta.env.DEV || new URLSearchParams(window.location.search).has('demo');
+const SHOW_ROUTINES_SETTING_KEY = 'upcomingShowRoutines';
 
 export function App() {
   return (
@@ -61,6 +62,11 @@ function Shell() {
   const bedtimeSetting = userData?.settings.find((s) => s.key === BEDTIME_SETTING_KEY)?.value;
   const bedtime = useMemo(() => parseBedtimeSettings(bedtimeSetting), [bedtimeSetting]);
   const bedtimeUntil = isBedtime(today, nowTime, bedtime) ? bedtime.end : null;
+
+  const showRoutines = userData?.settings.find((s) => s.key === SHOW_ROUTINES_SETTING_KEY)?.value !== false;
+  const setShowRoutines = (show: boolean) => {
+    void repository.setSetting(SHOW_ROUTINES_SETTING_KEY, show).catch(console.error);
+  };
 
   const openAction = overlay.kind === 'action' ? (actions.find((a) => a.id === overlay.actionId) ?? null) : null;
   const closeOverlay = useCallback(() => setOverlay({ kind: 'none' }), []);
@@ -162,7 +168,13 @@ function Shell() {
             }
           />
         ) : tab === 'upcoming' ? (
-          <UpcomingView actions={actions} {...cardHandlers} onAddForDate={(date) => openTaskEditor(null, date)} />
+          <UpcomingView
+            actions={actions}
+            {...cardHandlers}
+            onAddForDate={(date) => openTaskEditor(null, date)}
+            showRoutines={showRoutines}
+            onShowRoutinesChange={setShowRoutines}
+          />
         ) : (
           <RoutinesView
             routines={userData?.routines ?? []}
